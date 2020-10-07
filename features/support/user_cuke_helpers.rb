@@ -55,7 +55,7 @@ module UserCukeHelpers
 
   # delete all cookies, destroying the current session
   def logout
-    page.driver.clear_cookies
+    page.driver.browser.manage.delete_all_cookies
   end
 
   # go to user menu, expand it, and click logout
