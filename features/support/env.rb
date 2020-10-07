@@ -15,7 +15,7 @@ require "cucumber/rails"
 require "capybara/rails"
 require "capybara/cucumber"
 require "capybara/session"
-require "capybara/poltergeist"
+require "selenium/webdriver"
 
 require "cucumber/api_steps"
 
@@ -26,11 +26,22 @@ Rails.application.routes.default_url_options[:port] = AppConfig.pod_uri.port
 
 Capybara.server = :webrick
 
-Capybara.register_driver :poltergeist do |app|
-  Capybara::Poltergeist::Driver.new(app, timeout: 30)
+Capybara.register_driver :headless_firefox do |app|
+  Capybara::Selenium::Driver.load_selenium
+  browser_options = ::Selenium::WebDriver::Firefox::Options.new
+  browser_options.args << '-headless'
+  Capybara::Selenium::Driver.new(app, browser: :firefox, options: browser_options)
 end
 
-Capybara.javascript_driver = :poltergeist
+Capybara.register_driver :headless_firefox_mobile do |app|
+  Capybara::Selenium::Driver.load_selenium
+  browser_options = ::Selenium::WebDriver::Firefox::Options.new
+  browser_options.args << '-headless'
+  browser_options.add_preference('general.useragent.override','Mozilla/5.0 (Mobile; rv:18.0) Gecko/18.0 Firefox/18.0')
+  Capybara::Selenium::Driver.new(app, browser: :firefox, options: browser_options)
+end
+
+Capybara.javascript_driver = :headless_firefox
 
 # Capybara defaults to XPath selectors rather than Webrat's default of CSS3. In
 # order to ease the transition to Capybara we set the default here. If you'd
@@ -70,11 +81,9 @@ include HelperMethods
 
 Before do |scenario|
   Devise.mailer.deliveries = []
-  page.driver.headers = if scenario.source_tag_names.include? "@mobile"
-                          {"User-Agent" => "Mozilla/5.0 (Mobile; rv:18.0) Gecko/18.0 Firefox/18.0"}
-                        else
-                          {}
-                        end
+  if scenario.source_tag_names.include? "@mobile"
+    Capybara.current_driver = :headless_firefox_mobile
+  end
 
   # Reset overridden settings
   AppConfig.reset_dynamic!

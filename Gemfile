@@ -282,7 +282,7 @@ group :test do
 
   gem "capybara",           "3.15.0"
   gem "database_cleaner",   "1.8.3"
-  gem "poltergeist",        "1.18.1"
+  gem "selenium-webdriver", "3.142.7"
 
   gem "cucumber-api-steps", "0.14", require: false
 
